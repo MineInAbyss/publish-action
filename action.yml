@@ -82,7 +82,7 @@ runs:
       id: git-cliff
       with:
         config: ${{ github.action_path }}/mineinabyss-cliff.toml
-        args: "-v --unreleased --strip header --github-repo ${{ github.repository }}"
+        args: "-v --unreleased --github-repo ${{ github.repository }}"
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Create GitHub Release
