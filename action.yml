@@ -75,14 +75,14 @@ runs:
       id: extract_version
       run: |
         echo "BUMPED_VERSION"=$(gradle properties --console=plain -q | grep "^version:" | awk '{printf $2}') >> $GITHUB_ENV
-      if: ${{ inputs.release-files != '' }}
+      if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Generate a changelog
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
         args: "-vv --latest --strip header --github-repo ${{ github.repository }}"
-      if: ${{ inputs.publish-github-release == true }}
+      if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -92,7 +92,7 @@ runs:
         prerelease: ${{ env.IS_SNAPSHOT }}
         tag_name: ${{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
-      if: ${{ inputs.publish-github-release == true }}
+      if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Upload github pages artifact
       uses: actions/upload-pages-artifact@v1
