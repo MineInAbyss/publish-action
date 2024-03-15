@@ -81,13 +81,15 @@ runs:
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
-        args: "-vv --latest --strip header --github-repo ${{ github.repository }}"
+        config: ${{ github.action_path }}/mineinabyss-cliff.toml
+        args: "-v --unreleased --strip header --github-repo ${{ github.repository }}"
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         token: ${{ github.token }}
+        target_commitish: ${{ github.sha }}
         body: ${{ steps.git-cliff.outputs.content }}
         prerelease: ${{ env.IS_SNAPSHOT }}
         tag_name: ${{ env.BUMPED_VERSION }}
