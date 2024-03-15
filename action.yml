@@ -19,6 +19,10 @@ inputs:
     description: 'The files to attach to the release'
     required: false
     default: ''
+  publish-github-release:
+    description: 'Whether to publish a GitHub release'
+    required: false
+    default: 'true'
   maven-username:
     description: 'The username of the repository to publish to'
     required: true
@@ -77,8 +81,8 @@ runs:
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
-        args: -vv --latest --strip header --github-repo ${{ github.repository }}
-      if: ${{ inputs.release-files != '' }}
+        args: "-vv --latest --strip header --github-repo ${{ github.repository }}"
+      if: ${{ inputs.publish-github-release == true }}
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -88,7 +92,7 @@ runs:
         prerelease: ${{ env.IS_SNAPSHOT }}
         tag_name: ${{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
-      if: ${{ inputs.release-files != '' }}
+      if: ${{ inputs.publish-github-release == true }}
 
     - name: Upload github pages artifact
       uses: actions/upload-pages-artifact@v1
