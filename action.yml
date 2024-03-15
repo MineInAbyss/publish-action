@@ -39,38 +39,38 @@ runs:
     - shell: bash
       run: echo "IS_SNAPSHOT=${{github.ref == format('refs/heads/{0}', inputs.snapshot-branch)}}" >> $GITHUB_ENV
 
-    - name: Set up JDK
+    - name: ☕️ Set up JDK
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 17
         cache: gradle
 
-    - name: Set env variable for latest maven version
+    - name: 🪶️ Set env variable for latest maven version
       shell: bash
       run: |
         VERSION=$(curl -S -s ${{ inputs.maven-metadata-url }} 2>/dev/null | grep -oP '(?<=<latest>)(.*?)(?=<\/latest>)' || echo "0")
         echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
 
-    - name: Set env variable for latest maven snapshot version if passed
+    - name: 🪶️ Set env variable for latest maven snapshot version if passed
       shell: bash
       run: |
         SNAPSHOT_VERSION=$(curl -S -s ${{ inputs.maven-snapshot-metadata-url }} 2>/dev/null | grep -oP '(?<=<latest>)(.*?)(?=<\/latest>)' || echo "0")
         echo "BRANCH_VERSION=$SNAPSHOT_VERSION" >> $GITHUB_ENV
       if: ${{ inputs.maven-snapshot-metadata-url != '' }}
 
-    - name: Run gradle build and publish
+    - name: 🐘️ Run gradle build and publish
       shell: bash
       run: >
         gradle build publish
         -PmineinabyssMavenUsername=${{ inputs.maven-username }} -PmineinabyssMavenPassword=${{ inputs.maven-password }} -Pplugin_path=${{ github.workspace }}/publish
 
-    - name: Build with dokka
+    - name: 📜️ Build with dokka
       shell: bash
       run: gradle ${{ inputs.dokka }}
       if: ${{ inputs.dokka  != '' && env.IS_SNAPSHOT == false }}
 
-    - name: Get version from gradle
+    - name: 🐘️ Get version from gradle
       shell: bash
       id: extract_version
       run: |
@@ -84,22 +84,22 @@ runs:
         cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ github.workspace }}/mineinabyss-cliff/cliff.toml
       if: ${{ inputs.publish-github-release == 'true' }}
 
-    - name: Generate a changelog
+    - name: 📃️ Generate a changelog
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
-        config: /mineinabyss-cliff/cliff.toml
+        config: "$GITHUB_WORKSPACE/mineinabyss-cliff/cliff.toml"
         args: "-v --unreleased --github-repo ${{ github.repository }}"
       if: ${{ inputs.publish-github-release == 'true' }}
 
-    - name: Create GitHub Release
+    - name: 📦️ Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         token: ${{ github.token }}
         target_commitish: ${{ github.sha }}
         body: ${{ steps.git-cliff.outputs.content }}
         prerelease: ${{ env.IS_SNAPSHOT }}
-        tag_name: ${{ env.BUMPED_VERSION }}
+        tag_name: $v{{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
       if: ${{ inputs.publish-github-release == 'true' }}
 
