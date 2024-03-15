@@ -77,11 +77,16 @@ runs:
         echo "BUMPED_VERSION"=$(gradle properties --console=plain -q | grep "^version:" | awk '{printf $2}') >> $GITHUB_ENV
       if: ${{ inputs.publish-github-release == 'true' }}
 
+    - name: Copy cliff config to workspace for docker
+      shell: bash
+      run: cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ env.GITHUB_WORKSPACE }}/mineinabyss-cliff/cliff.toml
+      if: ${{ inputs.publish-github-release == 'true' }}
+
     - name: Generate a changelog
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
-        config: ${{ github.action_path }}/mineinabyss-cliff.toml
+        config: ${{ env.GITHUB_WORKSPACE }}/mineinabyss-cliff/cliff.toml
         args: "-v --unreleased --github-repo ${{ github.repository }}"
       if: ${{ inputs.publish-github-release == 'true' }}
 
