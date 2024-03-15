@@ -80,15 +80,15 @@ runs:
     - name: Copy cliff config to workspace for docker
       shell: bash
       run: |
-        mkdir -p ${{ env.GITHUB_WORKSPACE }}/mineinabyss-cliff
-        cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ env.GITHUB_WORKSPACE }}/mineinabyss-cliff/cliff.toml
+        mkdir -p ${{ github.workspace }}/mineinabyss-cliff
+        cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ github.workspace }}/mineinabyss-cliff/cliff.toml
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Generate a changelog
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
-        config: ${{ env.GITHUB_WORKSPACE }}/mineinabyss-cliff/cliff.toml
+        config: /mineinabyss-cliff/cliff.toml
         args: "-v --unreleased --github-repo ${{ github.repository }}"
       if: ${{ inputs.publish-github-release == 'true' }}
 
