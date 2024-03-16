@@ -63,7 +63,10 @@ runs:
       shell: bash
       run: >
         gradle build publish
-        -PmineinabyssMavenUsername=${{ inputs.maven-username }} -PmineinabyssMavenPassword=${{ inputs.maven-password }} -Pplugin_path=${{ github.workspace }}/publish
+        -PmineinabyssMavenUsername=${{ inputs.maven-username }}
+        -PmineinabyssMavenPassword=${{ inputs.maven-password }}
+        -Pplugin_path=${{ github.workspace }}/publish
+        -Ppaperweight.experimental.sharedCaches=true
 
     - name: 📜️ Build with dokka
       shell: bash
@@ -88,7 +91,7 @@ runs:
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
-        config: "$GITHUB_WORKSPACE/mineinabyss-cliff/cliff.toml"
+        config: "./mineinabyss-cliff/cliff.toml"
         args: "-v --unreleased --github-repo ${{ github.repository }}"
       if: ${{ inputs.publish-github-release == 'true' }}
 
