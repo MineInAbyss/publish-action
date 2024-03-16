@@ -3,7 +3,8 @@ description: 'Publishes to our maven repo, documentation, and release jars'
 inputs:
   maven-metadata-url:
     description: 'The URL to the maven-metadata.xml file to get latest version from'
-    required: true
+    required: false
+    default: ''
   maven-snapshot-metadata-url:
     description: 'The URL to the maven-metadata.xml file for snapshots/prereleases'
     required: false
@@ -11,6 +12,10 @@ inputs:
     description: 'The path to publish to GitHub Pages'
     required: false
     default: ''
+  run-gradle-build:
+    description: 'Whether to run a default gradle build'
+    required: false
+    default: 'true'
   dokka:
     description: 'The type of dokka build to run'
     required: false
@@ -25,10 +30,12 @@ inputs:
     default: 'true'
   maven-username:
     description: 'The username of the repository to publish to'
-    required: true
+    required: false
+    default: ''
   maven-password:
     description: 'The password of the repository to publish to'
-    required: true
+    required: false
+    default: ''
   snapshot-branch:
     description: 'When the workflow runs on this branch, publish to snapshots instead of releases'
     required: false
@@ -51,13 +58,14 @@ runs:
       run: |
         VERSION=$(curl -S -s ${{ inputs.maven-metadata-url }} 2>/dev/null | grep -oP '(?<=<latest>)(.*?)(?=<\/latest>)' || echo "0")
         echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+      if: ${{ inputs.run-gradle-build == 'true' && inputs.maven-metadata-url != '' }}
 
     - name: 🪶️ Set env variable for latest maven snapshot version if passed
       shell: bash
       run: |
         SNAPSHOT_VERSION=$(curl -S -s ${{ inputs.maven-snapshot-metadata-url }} 2>/dev/null | grep -oP '(?<=<latest>)(.*?)(?=<\/latest>)' || echo "0")
         echo "BRANCH_VERSION=$SNAPSHOT_VERSION" >> $GITHUB_ENV
-      if: ${{ inputs.maven-snapshot-metadata-url != '' }}
+      if: ${{ inputs.run-gradle-build == 'true' && inputs.maven-snapshot-metadata-url != '' }}
 
     - name: 🐘️ Run gradle build and publish
       shell: bash
@@ -67,11 +75,12 @@ runs:
         -PmineinabyssMavenPassword=${{ inputs.maven-password }}
         -Pplugin_path=${{ github.workspace }}/publish
         -Ppaperweight.experimental.sharedCaches=true
+      if: ${{ inputs.run-gradle-build == 'true' }}
 
     - name: 📜️ Build with dokka
       shell: bash
       run: gradle ${{ inputs.dokka }}
-      if: ${{ inputs.dokka  != '' && env.IS_SNAPSHOT == false }}
+      if: ${{ inputs.run-gradle-build == 'true' && inputs.dokka  != '' && env.IS_SNAPSHOT == false }}
 
     - name: 🐘️ Get version from gradle
       shell: bash
