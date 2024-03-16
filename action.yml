@@ -102,7 +102,7 @@ runs:
         target_commitish: ${{ github.sha }}
         body: ${{ steps.git-cliff.outputs.content }}
         prerelease: ${{ env.IS_SNAPSHOT }}
-        tag_name: $v{{ env.BUMPED_VERSION }}
+        tag_name: v${{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
       if: ${{ inputs.publish-github-release == 'true' }}
 
