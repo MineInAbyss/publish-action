@@ -48,30 +48,28 @@ filter_unconventional = false
 # process each line of a commit as an individual commit
 split_commits = true
 # regex for preprocessing the commit messages
-#commit_preprocessors = [
-#    { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))" },
-#    # Check spelling of the commit with https://github.com/crate-ci/typos
-#    # If the spelling is incorrect, it will be automatically fixed.
-#    { pattern = '.*', replace_command = 'typos --write-changes -' },
-#]
+commit_preprocessors = [
+    # Remove * prefix in GitHub's default squash commits
+    { pattern = '^(\* )', replace = "" },
+]
 # regex for parsing and grouping commits
 commit_parsers = [
-    { message = "^[Ff]eat", group = "<!-- 0 -->⛰️  Features" },
-    { message = "^[Ff]ix", group = "<!-- 1 -->🐛 Bug Fixes" },
-    { message = "^[Dd]oc", group = "<!-- 3 -->📚 Documentation" },
-    { message = "^[Pp]erf", group = "<!-- 4 -->⚡ Performance" },
+    { message = "^[Ff]eat", group = "<!-- 00 -->⛰️  Features" },
+    { message = "^[Ff]ix", group = "<!-- 01 -->🐛 Bug Fixes" },
+    { message = "^refactor", group = "<!-- 02 -->🚜 Refactor" },
+    { message = "^[Dd]oc[s]?", group = "<!-- 03 -->📚 Documentation" },
+    { message = "^[Pp]erf", group = "<!-- 04 -->⚡ Performance" },
     { message = "^refactor\\(clippy\\)", skip = true },
-    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
-    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
-    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+    { message = "^style", group = "<!-- 05 -->🎨 Styling" },
+    { message = "^test", group = "<!-- 06 -->🧪 Testing" },
     { message = "^chore\\(release\\): prepare for", skip = true },
     { message = "^chore\\(deps.*\\)", skip = true },
     { message = "^chore\\(pr\\)", skip = true },
     { message = "^chore\\(pull\\)", skip = true },
-    { message = "^[Cc]hore|^ci|^[Bb]ump", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
-    { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
-    { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
-    { message = ".*", group = "<!-- 10 -->🔍 Other" },
+    { message = "^[Cc]hore|^ci|^[Bb]ump|^[Dd]eps", group = "<!-- 07 -->⚙️ Miscellaneous Tasks" },
+    { body = ".*security", group = "<!-- 08 -->🛡️ Security" },
+    { message = "^revert", group = "<!-- 09 -->◀️ Revert" },
+    { message = "^\\S*:", group = "<!-- 10 -->🔍 Other" },
 ]
 # protect breaking changes from being skipped due to matching a skipping commit_parser
 protect_breaking_commits = false
