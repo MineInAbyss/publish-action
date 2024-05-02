@@ -50,7 +50,7 @@ runs:
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 17
+        java-version: 21
         cache: gradle
 
     - name: 🪶️ Set env variable for latest maven version
