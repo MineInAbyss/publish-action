@@ -40,6 +40,10 @@ inputs:
     description: 'When the workflow runs on this branch, publish to snapshots instead of releases'
     required: false
     default: 'develop'
+  build-tasks:
+    description: 'Tasks to run for the gradle build, can have multiple space separated tasks'
+    required: false
+    default: 'build publish'
 runs:
   using: "composite"
   steps:
@@ -70,7 +74,7 @@ runs:
     - name: 🐘️ Run gradle build and publish
       shell: bash
       run: >
-        gradle build publish
+        gradle ${{ inputs.build-tasks }}
         -PmineinabyssMavenUsername=${{ inputs.maven-username }}
         -PmineinabyssMavenPassword=${{ inputs.maven-password }}
         -Pplugin_path=${{ github.workspace }}/publish
