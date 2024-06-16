@@ -40,6 +40,10 @@ inputs:
     description: 'When the workflow runs on this branch, publish to snapshots instead of releases'
     required: false
     default: 'develop'
+  pre-build:
+    description: 'Shell commands to run before building with gradle'
+    required: false
+    default: ''
   build-tasks:
     description: 'Tasks to run for the gradle build, can have multiple space separated tasks'
     required: false
@@ -70,6 +74,11 @@ runs:
         SNAPSHOT_VERSION=$(curl -S -s ${{ inputs.maven-snapshot-metadata-url }} 2>/dev/null | grep -oP '(?<=<latest>)(.*?)(?=<\/latest>)' || echo "0")
         echo "BRANCH_VERSION=$SNAPSHOT_VERSION" >> $GITHUB_ENV
       if: ${{ inputs.run-gradle-build == 'true' && inputs.maven-snapshot-metadata-url != '' }}
+
+    - name: 🐘️ Run pre-build tasks
+      shell: bash
+      run: ${{ inputs.pre-build }}
+      if: ${{ inputs.pre-build != '' }}
 
     - name: 🐘️ Run gradle build and publish
       shell: bash
