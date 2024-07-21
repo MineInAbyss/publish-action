@@ -59,7 +59,9 @@ runs:
       with:
         distribution: temurin
         java-version: 21
-        cache: gradle
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
 
     - name: 🪶️ Set env variable for latest maven version
       shell: bash
@@ -83,7 +85,7 @@ runs:
     - name: 🐘️ Run gradle build and publish
       shell: bash
       run: >
-        gradle ${{ inputs.build-tasks }}
+        ./gradlew ${{ inputs.build-tasks }}
         -PmineinabyssMavenUsername=${{ inputs.maven-username }}
         -PmineinabyssMavenPassword=${{ inputs.maven-password }}
         -Pplugin_path=${{ github.workspace }}/publish
@@ -92,14 +94,14 @@ runs:
 
     - name: 📜️ Build with dokka
       shell: bash
-      run: gradle ${{ inputs.dokka }}
+      run: ./gradlew ${{ inputs.dokka }}
       if: ${{ inputs.run-gradle-build == 'true' && inputs.dokka  != '' && env.IS_SNAPSHOT == false }}
 
     - name: 🐘️ Get version from gradle
       shell: bash
       id: extract_version
       run: |
-        echo "BUMPED_VERSION"=$(gradle properties --console=plain -q | grep "^version:" | awk '{printf $2}') >> $GITHUB_ENV
+        echo "BUMPED_VERSION"=$(./gradlew properties --console=plain -q | grep "^version:" | awk '{printf $2}') >> $GITHUB_ENV
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Copy cliff config to workspace for docker
