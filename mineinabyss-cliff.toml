@@ -75,9 +75,6 @@ commit_parsers = [
 protect_breaking_commits = false
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
-# We ignore all tags since they cause a separate body to be created per tag,
-# i.e. if there were multiple dev releases before a merge, they would each get a body, but we want them all in one.
-ignore_tags = ".*"
 # sort the tags topologically
 topo_order = false
 # sort the commits inside sections by oldest/newest order

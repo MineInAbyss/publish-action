@@ -115,23 +115,13 @@ runs:
         cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ github.workspace }}/mineinabyss-cliff/cliff.toml
       if: ${{ inputs.publish-github-release == 'true' }}
 
-    - name: Get latest release tag
-      id: latest-release
-      uses: fangqiuming/latest-release-version@v1.1.1
-      with:
-        token: ${{ github.token }}
-        include_pre: ${{ env.IS_SNAPSHOT }}
-
     - name: 📃️ Generate a changelog
       uses: orhun/git-cliff-action@v3
       id: git-cliff
       with:
         config: "./mineinabyss-cliff/cliff.toml"
-        args: "-v ${{ env.range }}..HEAD --github-repo ${{ github.repository }}"
+        args: --unreleased ${{ env.IS_SNAPSHOT && '' || '--ignore-tags=".*-alpha.*"'}} --github-repo ${{ github.repository }}
       if: ${{ inputs.publish-github-release == 'true' }}
-      env:
-        # Don't specify a range if no release exists
-        range: "${{ steps.latest-release.outputs.version == 'v0.0.0' && '' || join(steps.latest-release.outputs.version, '..HEAD')  }}"
 
     - name: 📦️ Create GitHub Release
       uses: softprops/action-gh-release@v2
