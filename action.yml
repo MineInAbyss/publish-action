@@ -120,7 +120,7 @@ runs:
       id: git-cliff
       with:
         config: "./mineinabyss-cliff/cliff.toml"
-        args: --unreleased ${{ env.IS_SNAPSHOT && '' || '--ignore-tags=".*-(alpha|dev|pre|beta).*"'}} --github-repo ${{ github.repository }}
+        args: --unreleased ${{ env.IS_SNAPSHOT == 'true' && '' || '--ignore-tags=".*-(alpha|dev|pre|beta).*"'}} --github-repo ${{ github.repository }}
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: 📦️ Create GitHub Release
