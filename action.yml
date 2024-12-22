@@ -48,6 +48,10 @@ inputs:
     description: 'Tasks to run for the gradle build, can have multiple space separated tasks'
     required: false
     default: 'build publish'
+  changelog-prefix-file:
+    description: 'A file path to prefix the changelog with'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -123,12 +127,19 @@ runs:
         args: --unreleased ${{ env.IS_SNAPSHOT == 'true' && '' || '--ignore-tags=".*-(alpha|dev|pre|beta).*"'}} --github-repo ${{ github.repository }}
       if: ${{ inputs.publish-github-release == 'true' }}
 
+    - name: Read changelog prefix file
+      id: changelog-prefix
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: ${{ inputs.changelog-prefix-file }}
+      if: ${{ inputs.changelog-prefix-file != '' }}
+
     - name: 📦️ Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         token: ${{ github.token }}
         target_commitish: ${{ github.sha }}
-        body: ${{ steps.git-cliff.outputs.content }}
+        body: ${{ steps.changelog-prefix.outputs.content || '' }}${{ steps.git-cliff.outputs.content }}
         prerelease: ${{ env.IS_SNAPSHOT }}
         tag_name: v${{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
