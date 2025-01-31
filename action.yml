@@ -152,7 +152,7 @@ runs:
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Upload github pages artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v3
       with:
         path: ${{ inputs.pages-path }}
       if: ${{ inputs.pages-path != '' && env.IS_SNAPSHOT == false }}
