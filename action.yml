@@ -126,7 +126,7 @@ runs:
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: 📃️ Generate a changelog
-      uses: orhun/git-cliff-action@v3
+      uses: orhun/git-cliff-action@v4
       id: git-cliff
       with:
         config: "./mineinabyss-cliff/cliff.toml"
