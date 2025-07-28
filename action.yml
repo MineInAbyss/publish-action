@@ -56,14 +56,11 @@ inputs:
     description: 'When the workflow runs on this branch, publish to snapshots instead of releases'
     required: false
     default: 'develop'
-  is-snapshot:
-    description: 'Whether this is a snapshot build, used for publications'
-    default: "${{github.ref == format('refs/heads/{0}', inputs.snapshot-branch)}}"
 runs:
   using: "composite"
   steps:
     - shell: bash
-      run: echo "IS_SNAPSHOT=${{inputs.is-snapshot}}" >> $GITHUB_ENV
+      run: echo "IS_SNAPSHOT=${{github.ref == format('refs/heads/{0}', inputs.snapshot-branch)}}" >> $GITHUB_ENV
 
     - name: ☕️ Set up JDK
       uses: actions/setup-java@v4
