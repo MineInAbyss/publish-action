@@ -29,15 +29,19 @@ fun String.toSemver(): Semver {
 val EMPTY_SEMVER = Semver(0, 0, 0)
 
 val currentBranch = runCommand("git rev-parse --abbrev-ref HEAD")
+val shortenedBranchName = when(currentBranch) {
+    "develop" -> "dev"
+    else -> currentBranch
+}
 
 // Latest tag on main branch
-val tagOnMain = runCommand("git describe --tags --abbrev=0 origin/$mainBranch --exclude '*-*'").toSemver()
+val tagOnMain = runCommand("git describe --tags --abbrev=0 origin/$mainBranch --match 'v*' --exclude '*-*'").toSemver()
     // Fallback to main branch without remote
-    .takeIf { it != EMPTY_SEMVER } ?:  runCommand("git describe --tags --abbrev=0 $mainBranch --exclude '*-*'").toSemver()
+    .takeIf { it != EMPTY_SEMVER } ?:  runCommand("git describe --tags --abbrev=0 $mainBranch --match 'v*'  --exclude '*-*'").toSemver()
 
 // Latest tag which includes this branch's name
 val tagOnBranch =
-    if (currentBranch == mainBranch) tagOnMain else runCommand("git describe --tags --abbrev=0 --match '*-$currentBranch.*'").toSemver()
+    if (currentBranch == mainBranch) tagOnMain else runCommand("git describe --tags --abbrev=0 --match 'v*-$shortenedBranchName.*'").toSemver()
 
 val newPatch = when {
     // When version bumped by user
@@ -62,10 +66,10 @@ val nextVersion = when {
             // Otherwise reset version
             else -> 0
         }
-        "${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch-${currentBranch}.${branchVersion}"
+        "v${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch-${shortenedBranchName}.${branchVersion}"
     }
 
-    else -> "${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch"
+    else -> "v${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch"
 }
 
 
