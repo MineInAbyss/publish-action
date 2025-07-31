@@ -66,10 +66,10 @@ val nextVersion = when {
             // Otherwise reset version
             else -> 0
         }
-        "v${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch-${shortenedBranchName}.${branchVersion}"
+        "${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch-${shortenedBranchName}.${branchVersion}"
     }
 
-    else -> "v${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch"
+    else -> "${userDefinedVersion.major}.${userDefinedVersion.minor}.$newPatch"
 }
 
 
