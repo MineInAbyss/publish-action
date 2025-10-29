@@ -109,13 +109,19 @@ runs:
         cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ github.workspace }}/mineinabyss-cliff/cliff.toml
       if: ${{ inputs.publish-github-release == 'true' }}
 
+    - name: Get changelog from CHANGELOG.md if present
+      shell: bash
+      id: changelog
+      continue-on-error: true
+      run: echo "CHANGELOG"=$(${{ github.action_path }}/changelog.main.kts '${{ env.BUMPED_VERSION }}') >> $GITHUB_OUTPUT
+
     - name: 📃️ Generate a changelog
       uses: orhun/git-cliff-action@v4
       id: git-cliff
       with:
         config: "./mineinabyss-cliff/cliff.toml"
         args: --unreleased ${{ !env.IS_SNAPSHOT && '--ignore-tags=".*-(alpha|dev|pre|beta).*"' || '' }} --github-repo ${{ github.repository }}
-      if: ${{ inputs.publish-github-release == 'true' }}
+      if: ${{ inputs.publish-github-release == 'true' && steps.changelog.outcome == 'failure' }}
 
     - name: Read changelog prefix file
       id: changelog-prefix
@@ -129,7 +135,9 @@ runs:
       with:
         token: ${{ github.token }}
         target_commitish: ${{ github.sha }}
-        body: ${{ steps.changelog-prefix.outputs.content || '' }}${{ steps.git-cliff.outputs.content }}
+        body: >
+          ${{ steps.changelog-prefix.outputs.content || '' }}
+          ${{ steps.changelog.outputs.CHANGELOG || steps.git-cliff.outputs.content }}
         prerelease: ${{ env.IS_SNAPSHOT }}
         tag_name: v${{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
