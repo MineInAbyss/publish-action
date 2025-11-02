@@ -113,7 +113,10 @@ runs:
       shell: bash
       id: changelog
       continue-on-error: true
-      run: echo "CHANGELOG"=$(${{ github.action_path }}/changelog.main.kts '${{ env.BUMPED_VERSION }}') >> $GITHUB_OUTPUT
+      run: |
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        ${{ github.action_path }}/changelog.main.kts '${{ env.BUMPED_VERSION }}' >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: 📃️ Generate a changelog
       uses: orhun/git-cliff-action@v4
