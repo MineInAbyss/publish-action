@@ -1,0 +1,27 @@
+name: Publish docs
+inputs:
+  build-tasks:
+    description: 'Tasks to run for the gradle build, can have multiple space separated tasks'
+    required: false
+    default: 'docsGenerate'
+  outputDir:
+    description: 'Output directory of generated docs'
+    required: false
+    default: 'out'
+runs:
+  using: composite
+  steps:
+    - uses: action.yml
+      with:
+        publish-github-release: false
+        build-tasks: ${{ inputs.build-tasks }}
+
+    - name: Update HTML links for GitHub Pages subdomain
+      run: |
+        find 'docs/out' -name "*.html" -exec sed -i 's#href="/#href="/${{ github.event.repository.name }}/#g; s#src="/#src="/${{ github.event.repository.name }}/#g' {} \;
+      shell: bash
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ${{ inputs.outputDir }}
