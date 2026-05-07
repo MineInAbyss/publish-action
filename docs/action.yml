@@ -11,7 +11,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: ./action.yml
+    - uses: ${{ github.action_path }}/../action.yml
       with:
         publish-github-release: false
         build-tasks: ${{ inputs.build-tasks }}
