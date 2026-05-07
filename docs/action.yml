@@ -11,7 +11,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: "../action.yml"
+    - uses: MineInAbyss/publish-action@v3
       with:
         publish-github-release: false
         build-tasks: ${{ inputs.build-tasks }}
