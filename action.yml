@@ -56,14 +56,14 @@ runs:
       run: echo "IS_SNAPSHOT=${{github.ref == format('refs/heads/{0}', inputs.snapshot-branch)}}" >> $GITHUB_ENV
 
     - name: ☕️ Set up JDK
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: temurin
         java-version: 21
       if: ${{ inputs.skip-java-setup != 'true' }}
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+      uses: gradle/actions/setup-gradle@v6
       if: ${{ inputs.skip-java-setup != 'true' }}
 
     - name: Grant execute permission for gradlew
