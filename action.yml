@@ -74,7 +74,11 @@ runs:
       shell: bash
       id: extract_version
       run: |
-        echo "VERSION"=$(./gradlew properties --console=plain -q | grep "^version:" | awk '{printf $2}') >> $GITHUB_ENV
+        if [ -f "gradle.properties" ] && grep -q "^version=" gradle.properties; then
+          echo "VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | xargs)" >> $GITHUB_ENV
+        else
+          echo "VERSION=$(./gradlew properties --console=plain -q | grep "^version:" | awk '{printf $2}')" >> $GITHUB_ENV
+        fi
       if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: Get next semver version
@@ -114,9 +118,9 @@ runs:
       id: changelog
       continue-on-error: true
       run: |
-        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        echo "CHANGELOG<<EOF" >> "$GITHUB_OUTPUT"
         ${{ github.action_path }}/changelog.main.kts '${{ env.BUMPED_VERSION }}' >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        echo "EOF" >> "$GITHUB_OUTPUT"
 
     - name: 📃️ Generate a changelog
       uses: orhun/git-cliff-action@v4
