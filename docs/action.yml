@@ -18,7 +18,7 @@ runs:
 
     - name: Update HTML links for GitHub Pages subdomain
       run: |
-        find 'docs/out' -name "*.html" -exec sed -i 's#href="/#href="/${{ github.event.repository.name }}/#g; s#src="/#src="/${{ github.event.repository.name }}/#g' {} \;
+        find '${{ inputs.outputDir }}' -name "*.html" -exec sed -i 's#href="/#href="/${{ github.event.repository.name }}/#g; s#src="/#src="/${{ github.event.repository.name }}/#g' {} \;
       shell: bash
 
     - name: Upload artifact
