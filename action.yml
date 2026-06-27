@@ -9,10 +9,6 @@ inputs:
     description: 'Whether to run a default gradle build'
     required: false
     default: 'true'
-  dokka:
-    description: 'The type of dokka build to run'
-    required: false
-    default: ''
   release-files:
     description: 'The files to attach to the release'
     required: false
@@ -45,15 +41,23 @@ inputs:
     description: "Don't run setup JDK and gradle tasks (useful if another action using this one needs them setup manually)"
     required: false
     default: false
-  snapshot-branch:
+  develop-branch:
     description: 'When the workflow runs on this branch, publish to snapshots instead of releases'
     required: false
     default: 'develop'
+  snapshot-branch:
+    description: 'When the workflow runs on this branch, publish to snapshots instead of releases'
+    required: false
+    default: 'snapshot'
 runs:
   using: "composite"
   steps:
-    - shell: bash
-      run: echo "IS_SNAPSHOT=${{github.ref == format('refs/heads/{0}', inputs.snapshot-branch)}}" >> $GITHUB_ENV
+    - name: Set build type environment variables
+      shell: bash
+      run: |
+        echo "IS_DEVELOP_BUILD=${{ github.ref == format('refs/heads/{0}', inputs.develop-branch) }}" >> $GITHUB_ENV
+        echo "IS_SNAPSHOT_BUILD=${{ github.ref == format('refs/heads/{0}', inputs.snapshot-branch) }}" >> $GITHUB_ENV
+        echo "IS_SNAPSHOT=${{ github.ref == format('refs/heads/{0}', inputs.develop-branch) || github.ref == format('refs/heads/{0}', inputs.snapshot-branch) }}" >> $GITHUB_ENV
 
     - name: ☕️ Set up JDK
       uses: actions/setup-java@v5
@@ -83,7 +87,13 @@ runs:
 
     - name: Get next semver version
       shell: bash
-      run: echo "BUMPED_VERSION"=$(${{ github.action_path }}/nextVersion.main.kts $VERSION master) >> $GITHUB_ENV
+      run: |
+        if [[ "${{ env.IS_SNAPSHOT_BUILD }}" == "true" ]]; then
+          echo "BUMPED_VERSION=${{ env.VERSION }}-SNAPSHOT" >> $GITHUB_ENV
+        else
+          echo "BUMPED_VERSION=$(${{ github.action_path }}/nextVersion.main.kts ${{ env.VERSION }} master)" >> $GITHUB_ENV
+        fi
+      if: ${{ inputs.publish-github-release == 'true' }}
 
     - name: 🐘️ Run pre-build tasks
       shell: bash
@@ -97,21 +107,16 @@ runs:
         -PmineinabyssMavenUsername=${{ inputs.maven-username }}
         -PmineinabyssMavenPassword=${{ inputs.maven-password }}
         -Pplugin_path=${{ github.workspace }}/publish
-        -Pversion=$BUMPED_VERSION
+        -Pversion=${{ env.BUMPED_VERSION }}
         -Ppaperweight.experimental.sharedCaches=true
       if: ${{ inputs.run-gradle-build == 'true' }}
-
-    - name: 📜️ Build with dokka
-      shell: bash
-      run: ./gradlew ${{ inputs.dokka }}
-      if: ${{ inputs.run-gradle-build == 'true' && inputs.dokka  != '' && env.IS_SNAPSHOT == false }}
 
     - name: Copy cliff config to workspace for docker
       shell: bash
       run: |
         mkdir -p ${{ github.workspace }}/mineinabyss-cliff
         cp ${{ github.action_path }}/mineinabyss-cliff.toml ${{ github.workspace }}/mineinabyss-cliff/cliff.toml
-      if: ${{ inputs.publish-github-release == 'true' }}
+      if: ${{ inputs.publish-github-release == 'true' && env.IS_SNAPSHOT_BUILD == 'false' }}
 
     - name: Get changelog from CHANGELOG.md if present
       shell: bash
@@ -121,6 +126,7 @@ runs:
         echo "CHANGELOG<<EOF" >> "$GITHUB_OUTPUT"
         ${{ github.action_path }}/changelog.main.kts '${{ env.BUMPED_VERSION }}' >> $GITHUB_OUTPUT
         echo "EOF" >> "$GITHUB_OUTPUT"
+      if: ${{ inputs.publish-github-release == 'true' && env.IS_SNAPSHOT_BUILD == 'false' }}
 
     - name: 📃️ Generate a changelog
       uses: orhun/git-cliff-action@v4
@@ -128,14 +134,14 @@ runs:
       with:
         config: "./mineinabyss-cliff/cliff.toml"
         args: --unreleased ${{ !env.IS_SNAPSHOT && '--ignore-tags=".*-(alpha|dev|pre|beta).*"' || '' }} --github-repo ${{ github.repository }}
-      if: ${{ inputs.publish-github-release == 'true' && steps.changelog.outcome == 'failure' }}
+      if: ${{ inputs.publish-github-release == 'true' && steps.changelog.outcome == 'failure' && env.IS_SNAPSHOT_BUILD == 'false' }}
 
     - name: Read changelog prefix file
       id: changelog-prefix
       uses: juliangruber/read-file-action@v1
       with:
         path: ${{ inputs.changelog-prefix-file }}
-      if: ${{ inputs.changelog-prefix-file != '' }}
+      if: ${{ inputs.changelog-prefix-file != '' && env.IS_SNAPSHOT_BUILD == 'false' }}
 
     - name: 📦️ Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -145,13 +151,13 @@ runs:
         body: >
           ${{ steps.changelog-prefix.outputs.content || '' }}
           ${{ steps.changelog.outputs.CHANGELOG || steps.git-cliff.outputs.content }}
-        prerelease: ${{ env.IS_SNAPSHOT }}
+        prerelease: ${{ env.IS_DEVELOP_BUILD == 'true' }}
         tag_name: v${{ env.BUMPED_VERSION }}
         files: ${{ inputs.release-files }}
-      if: ${{ inputs.publish-github-release == 'true' }}
+      if: ${{ inputs.publish-github-release == 'true' && env.IS_SNAPSHOT_BUILD == 'false' }}
 
     - name: Upload github pages artifact
       uses: actions/upload-pages-artifact@v3
       with:
         path: ${{ inputs.pages-path }}
-      if: ${{ inputs.pages-path != '' && env.IS_SNAPSHOT == false }}
+      if: ${{ inputs.pages-path != '' && env.IS_SNAPSHOT == 'false' }}
