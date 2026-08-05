@@ -8,6 +8,10 @@ inputs:
     description: 'Output directory of generated docs'
     required: false
     default: 'out'
+  update-subdomain-links:
+    description: 'Whether to update links pointing to / to a subdomain (defaulting to the repo name)'
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
@@ -20,6 +24,7 @@ runs:
       run: |
         find '${{ inputs.outputDir }}' -name "*.html" -exec sed -i 's#href="/#href="/${{ github.event.repository.name }}/#g; s#src="/#src="/${{ github.event.repository.name }}/#g' {} \;
       shell: bash
+      if: "${{ inputs.update-subdomain-links == 'true' }}"
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
