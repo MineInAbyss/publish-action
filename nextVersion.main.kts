@@ -34,14 +34,26 @@ val shortenedBranchName = when(currentBranch) {
     else -> currentBranch
 }
 
-// Latest tag on main branch
-val tagOnMain = runCommand("git describe --tags --abbrev=0 origin/$mainBranch --match 'v*' --exclude '*-*'").toSemver()
-    // Fallback to main branch without remote
-    .takeIf { it != EMPTY_SEMVER } ?:  runCommand("git describe --tags --abbrev=0 $mainBranch --match 'v*'  --exclude '*-*'").toSemver()
+/**
+ * Highest tag matching [pattern], ordered by version rather than by reachability from HEAD.
+ *
+ * git describe only sees tags that are ancestors of HEAD, so rebasing a branch orphans its own tags and the
+ * version silently restarts at 0, republishing over a release that already exists.
+ */
+fun highestTag(pattern: String, releasesOnly: Boolean = false): Semver =
+    runCommand("git tag --list '$pattern' --sort=-v:refname")
+        .lineSequence()
+        .filter { it.isNotBlank() }
+        .filterNot { releasesOnly && '-' in it.removePrefix("v") }
+        .firstOrNull()
+        ?.toSemver() ?: EMPTY_SEMVER
+
+// Latest release tag, ignoring prereleases
+val tagOnMain = highestTag("v*", releasesOnly = true)
 
 // Latest tag which includes this branch's name
 val tagOnBranch =
-    if (currentBranch == mainBranch) tagOnMain else runCommand("git describe --tags --abbrev=0 --match 'v*-$shortenedBranchName.*'").toSemver()
+    if (currentBranch == mainBranch) tagOnMain else highestTag("v*-$shortenedBranchName.*")
 
 val newPatch = when {
     // When version bumped by user
