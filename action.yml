@@ -111,6 +111,19 @@ runs:
         -Ppaperweight.experimental.sharedCaches=true
       if: ${{ inputs.run-gradle-build == 'true' }}
 
+    - name: Bundle JSON schemas for the release
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ./gradlew tasks --all --console=plain -q | grep -qE '^([^ ]*:)?generateSchemas( |$)'; then
+          out="$RUNNER_TEMP/schemas"
+          rm -rf "$out"
+          ./gradlew generateSchemas "-PschemaOutput=$out" -Pversion=${{ env.BUMPED_VERSION }}
+          (cd "$out" && zip -qr "$RUNNER_TEMP/schemas.zip" .)
+          echo "SCHEMAS_ZIP=$RUNNER_TEMP/schemas.zip" >> $GITHUB_ENV
+        fi
+      if: ${{ inputs.run-gradle-build == 'true' && inputs.publish-github-release == 'true' && env.IS_SNAPSHOT_BUILD == 'false' }}
+
     - name: Copy cliff config to workspace for docker
       shell: bash
       run: |
@@ -153,7 +166,9 @@ runs:
           ${{ steps.changelog.outputs.CHANGELOG || steps.git-cliff.outputs.content }}
         prerelease: ${{ env.IS_DEVELOP_BUILD == 'true' }}
         tag_name: v${{ env.BUMPED_VERSION }}
-        files: ${{ inputs.release-files }}
+        files: |
+          ${{ inputs.release-files }}
+          ${{ env.SCHEMAS_ZIP }}
       if: ${{ inputs.publish-github-release == 'true' && env.IS_SNAPSHOT_BUILD == 'false' }}
 
     - name: Upload github pages artifact
